@@ -25,4 +25,8 @@ export const SCHEMA_STATEMENTS: string[] = [
     worn_at TEXT,
     created_at TEXT NOT NULL
   );`,
+  `CREATE TABLE IF NOT EXISTS app_meta (
+    key TEXT PRIMARY KEY NOT NULL,
+    value TEXT NOT NULL
+  );`,
 ];

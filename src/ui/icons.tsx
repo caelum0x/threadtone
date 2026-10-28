@@ -111,6 +111,14 @@ export function ChevronLeftIcon({ size = 24, color = '#F7F8F8', strokeWidth = 2 
   );
 }
 
+export function ChevronRightIcon({ size = 24, color = '#F7F8F8', strokeWidth = 2 }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Polyline points="9 5 16 12 9 19" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
 export function GridIcon({ size = 24, color = '#F7F8F8', strokeWidth = 2 }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">

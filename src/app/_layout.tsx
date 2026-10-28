@@ -1,13 +1,29 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { useLocalDbBootstrap } from '../db/bootstrap';
+import { isOnboardingComplete } from '../repo/appMeta';
 import { color, space, type as textType } from '../theme/tokens';
+import { OnboardingScreen } from '../ui/OnboardingScreen';
 
 export default function RootLayout() {
   const { ready, error } = useLocalDbBootstrap();
+  const [onboardingComplete, setOnboardingComplete] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!ready) return;
+    let cancelled = false;
+    (async () => {
+      const complete = await isOnboardingComplete();
+      if (!cancelled) setOnboardingComplete(complete);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [ready]);
 
   if (error) {
     return (
@@ -20,12 +36,21 @@ export default function RootLayout() {
     );
   }
 
-  if (!ready) {
+  if (!ready || onboardingComplete === null) {
     return (
       <SafeAreaProvider>
         <View style={styles.center}>
           <ActivityIndicator color={color.text1} />
         </View>
+      </SafeAreaProvider>
+    );
+  }
+
+  if (!onboardingComplete) {
+    return (
+      <SafeAreaProvider>
+        <StatusBar style="light" />
+        <OnboardingScreen onDone={() => setOnboardingComplete(true)} />
       </SafeAreaProvider>
     );
   }
