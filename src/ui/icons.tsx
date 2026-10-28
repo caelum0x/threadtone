@@ -231,3 +231,23 @@ export function SunIcon({ size = 24, color = '#F7F8F8', strokeWidth = 2 }: IconP
     </Svg>
   );
 }
+
+export function DownloadIcon({ size = 24, color = '#F7F8F8', strokeWidth = 2 }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Line x1="12" y1="3.5" x2="12" y2="14" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
+      <Polyline points="7.5,10 12,14.5 16.5,10" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      <Path d="M4.5 16.5V18.5a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V16.5" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+export function UploadIcon({ size = 24, color = '#F7F8F8', strokeWidth = 2 }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Line x1="12" y1="14.5" x2="12" y2="4" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
+      <Polyline points="7.5,8 12,3.5 16.5,8" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      <Path d="M4.5 16.5V18.5a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V16.5" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
+    </Svg>
+  );
+}

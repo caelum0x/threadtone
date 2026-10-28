@@ -39,7 +39,8 @@
           "photosPermission": "Wearday uses your photo library so you can add photos of clothes you already own.",
           "cameraPermission": "Wearday uses the camera to photograph a clothing item for your wardrobe."
         }
-      ]
+      ],
+      "expo-sharing"
     ]
   }
 }
