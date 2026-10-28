@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { generateOutfits } from '../../lib/outfitGenerator';
 import type { ClothingItem, OutfitSuggestion } from '../../lib/types';
-import { createOutfit } from '../../repo/outfits';
+import { createOutfit, getLastWornMap } from '../../repo/outfits';
 import { listItems } from '../../repo/items';
 import { Button } from '../../ui/Button';
 import { ColorDot } from '../../ui/ColorDot';
@@ -13,7 +13,7 @@ import { EmptyState } from '../../ui/EmptyState';
 import { ItemThumbnail } from '../../ui/ItemThumbnail';
 import { CheckIcon, ShuffleIcon, SunIcon } from '../../ui/icons';
 import { GlassCard } from '../../ui/GlassCard';
-import { color, radius, space, type as textType } from '../../theme/tokens';
+import { color, space, type as textType } from '../../theme/tokens';
 
 function dateSeedIndex(length: number, date = new Date()): number {
   if (length === 0) return 0;
@@ -33,9 +33,12 @@ export default function TodayScreen() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const items: ClothingItem[] = await listItems();
+      const [items, lastWornAt]: [ClothingItem[], Map<string, string>] = await Promise.all([
+        listItems(),
+        getLastWornMap(),
+      ]);
       setWardrobeSize(items.length);
-      const generated = generateOutfits(items, { limit: 8 });
+      const generated = generateOutfits(items, { limit: 8, lastWornAt });
       setSuggestions(generated);
       setIndex(dateSeedIndex(generated.length));
       setLogged(false);

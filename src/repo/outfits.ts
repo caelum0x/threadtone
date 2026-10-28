@@ -14,6 +14,29 @@ export async function listOutfits(): Promise<Outfit[]> {
   return rows.map(mapOutfitRow);
 }
 
+/**
+ * Item id -> the most recent ISO timestamp that item was logged as worn,
+ * across every saved outfit. Feeds the outfit generator's freshness scoring
+ * (src/lib/outfitGenerator.ts) so it can favor pieces that haven't been worn
+ * in a while instead of repeating the same "best" combo every day.
+ */
+export async function getLastWornMap(): Promise<Map<string, string>> {
+  const outfits = await listOutfits();
+  const lastWornAt = new Map<string, string>();
+
+  for (const outfit of outfits) {
+    if (!outfit.wornAt) continue;
+    for (const itemId of outfit.itemIds) {
+      const current = lastWornAt.get(itemId);
+      if (!current || outfit.wornAt > current) {
+        lastWornAt.set(itemId, outfit.wornAt);
+      }
+    }
+  }
+
+  return lastWornAt;
+}
+
 export async function getOutfit(id: string): Promise<Outfit | null> {
   const row = await db.getFirstAsync<OutfitRow>('SELECT * FROM outfits WHERE id = ?;', [id]);
   return row ? mapOutfitRow(row) : null;

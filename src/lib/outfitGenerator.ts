@@ -1,13 +1,15 @@
 /**
  * Builds outfit suggestions from the pieces a person actually owns.
  *
- * The generator does three real things, not a random shuffle:
+ * The generator does four real things, not a random shuffle:
  * 1. Assembles valid slot combinations (a dress stands alone; a top+bottom
  *    pair does not combine with a dress in the same outfit).
- * 2. Scores every combination on three real style rules: color harmony
+ * 2. Scores every combination on real style rules: color harmony
  *    (src/lib/colorTheory.ts), formality cohesion (don't pair a formal
- *    blazer with gym shoes), and pattern clash (at most one bold pattern per
- *    outfit, a classic styling rule).
+ *    blazer with gym shoes), pattern clash (at most one bold pattern per
+ *    outfit, a classic styling rule), and recency (pieces worn in the last
+ *    week score lower, so a small wardrobe doesn't get recommended on
+ *    repeat every day — see `freshnessScore`).
  * 3. Explains the score in plain language so the suggestion is legible, not
  *    a black box.
  */
@@ -21,6 +23,32 @@ const FORMALITY_RANK: Record<Formality, number> = {
 };
 
 const BOLD_PATTERNS: Pattern[] = ['striped', 'plaid', 'floral', 'graphic'];
+
+/** How many days until a recently-worn piece is scored as fully "fresh" again. */
+const FRESHNESS_LOOKBACK_DAYS = 7;
+
+/** Maps an item id to the ISO timestamp it was most recently logged as worn. */
+export type LastWornMap = Map<string, string>;
+
+/**
+ * 1 = not worn within the lookback window (or never worn). Ramps down toward
+ * 0 the more recently an item was worn, so the generator favors pieces that
+ * have had a rest instead of repeating the same "best" combo every day.
+ */
+function itemFreshness(item: ClothingItem, lastWornAt: LastWornMap, now: Date): number {
+  const wornAt = lastWornAt.get(item.id);
+  if (!wornAt) return 1;
+
+  const daysSince = (now.getTime() - new Date(wornAt).getTime()) / (1000 * 60 * 60 * 24);
+  if (daysSince >= FRESHNESS_LOOKBACK_DAYS) return 1;
+  return Math.max(0, daysSince / FRESHNESS_LOOKBACK_DAYS);
+}
+
+function freshnessScore(items: ClothingItem[], lastWornAt: LastWornMap, now: Date): number {
+  if (lastWornAt.size === 0 || items.length === 0) return 1;
+  const total = items.reduce((sum, item) => sum + itemFreshness(item, lastWornAt, now), 0);
+  return total / items.length;
+}
 
 function colorScore(items: ClothingItem[]): { score: number; label: string } {
   if (items.length < 2) return { score: 1, label: 'single piece' };
@@ -59,7 +87,13 @@ function patternScore(items: ClothingItem[]): number {
   return 0.2;
 }
 
-function buildReasons(items: ClothingItem[], colorLabel: string, formality: number, pattern: number): string[] {
+function buildReasons(
+  items: ClothingItem[],
+  colorLabel: string,
+  formality: number,
+  pattern: number,
+  freshness: number,
+): string[] {
   const reasons: string[] = [];
   const names = items.map((item) => item.colorName.toLowerCase());
   const uniqueNames = [...new Set(names)];
@@ -88,6 +122,10 @@ function buildReasons(items: ClothingItem[], colorLabel: string, formality: numb
     reasons.push(pattern <= 0.3 ? 'Several bold patterns together will compete for attention.' : 'Two bold patterns together — bolder than a classic pairing.');
   }
 
+  if (freshness < 0.5) {
+    reasons.push('Repeats a piece you wore earlier this week — shuffle for a fresher pick.');
+  }
+
   return reasons;
 }
 
@@ -95,23 +133,33 @@ function capitalize(value: string): string {
   return value.length === 0 ? value : value[0].toUpperCase() + value.slice(1);
 }
 
-/** Scores an arbitrary set of items a person picked by hand — same rules the generator uses. */
-export function scoreOutfit(items: ClothingItem[]): OutfitSuggestion {
+/**
+ * Scores an arbitrary set of items a person picked by hand — same rules the
+ * generator uses. `lastWornAt` is optional: pass it (item id -> ISO worn
+ * timestamp) to also weigh how recently each piece was worn; omit it for a
+ * pure style score (e.g. the manual "build an outfit" screen, where the
+ * person is deliberately choosing, not asking for a fresh suggestion).
+ */
+export function scoreOutfit(items: ClothingItem[], lastWornAt: LastWornMap = new Map(), now: Date = new Date()): OutfitSuggestion {
   const color = colorScore(items);
   const formality = formalityScore(items);
   const pattern = patternScore(items);
-  const score = color.score * 0.5 + formality * 0.3 + pattern * 0.2;
+  const freshness = freshnessScore(items, lastWornAt, now);
+  const score = color.score * 0.4 + formality * 0.25 + pattern * 0.15 + freshness * 0.2;
 
   return {
     items,
     score,
-    reasons: buildReasons(items, color.label, formality, pattern),
+    reasons: buildReasons(items, color.label, formality, pattern, freshness),
   };
 }
 
 export interface GenerateOptions {
   /** Maximum number of ranked suggestions to return. */
   limit?: number;
+  /** Item id -> ISO timestamp last logged as worn, used to favor fresher pieces. */
+  lastWornAt?: LastWornMap;
+  now?: Date;
 }
 
 /**
@@ -121,6 +169,8 @@ export interface GenerateOptions {
  */
 export function generateOutfits(wardrobe: ClothingItem[], options: GenerateOptions = {}): OutfitSuggestion[] {
   const limit = options.limit ?? 5;
+  const lastWornAt = options.lastWornAt ?? new Map();
+  const now = options.now ?? new Date();
   const byCategory = {
     top: wardrobe.filter((i) => i.category === 'top'),
     bottom: wardrobe.filter((i) => i.category === 'bottom'),
@@ -162,7 +212,7 @@ export function generateOutfits(wardrobe: ClothingItem[], options: GenerateOptio
   }
 
   return combinations
-    .map(scoreOutfit)
+    .map((combo) => scoreOutfit(combo, lastWornAt, now))
     .sort((a, b) => b.score - a.score)
     .slice(0, limit);
 }
@@ -170,10 +220,16 @@ export function generateOutfits(wardrobe: ClothingItem[], options: GenerateOptio
 /**
  * Deterministic "today's outfit": picks the same top suggestion all day for
  * a given date, then rotates to a fresh one tomorrow, by seeding the choice
- * with the date instead of pure randomness.
+ * with the date instead of pure randomness. `lastWornAt` lets the ranking
+ * itself favor pieces that haven't been worn in the last week, on top of the
+ * date-seeded rotation.
  */
-export function pickTodaysOutfit(wardrobe: ClothingItem[], date: Date = new Date()): OutfitSuggestion | null {
-  const suggestions = generateOutfits(wardrobe, { limit: 8 });
+export function pickTodaysOutfit(
+  wardrobe: ClothingItem[],
+  date: Date = new Date(),
+  lastWornAt: LastWornMap = new Map(),
+): OutfitSuggestion | null {
+  const suggestions = generateOutfits(wardrobe, { limit: 8, lastWornAt, now: date });
   if (suggestions.length === 0) return null;
 
   const seed = Number(`${date.getFullYear()}${date.getMonth()}${date.getDate()}`);
