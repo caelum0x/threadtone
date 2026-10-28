@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scoreOutfit } from '../../lib/outfitGenerator';
 import type { ClothingCategory, ClothingItem } from '../../lib/types';
 import { CLOTHING_CATEGORIES } from '../../lib/types';
-import { listItems } from '../../repo/items';
+import { listActiveItems } from '../../repo/items';
 import { createOutfit } from '../../repo/outfits';
 import { color, radius, space, type as textType } from '../../theme/tokens';
 import { Button } from '../../ui/Button';
@@ -34,7 +34,7 @@ export default function BuildOutfitScreen() {
 
   useEffect(() => {
     void (async () => {
-      setItems(await listItems());
+      setItems(await listActiveItems());
       setLoading(false);
     })();
   }, []);

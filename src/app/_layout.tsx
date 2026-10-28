@@ -62,8 +62,15 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="item/new" options={{ presentation: 'modal' }} />
         <Stack.Screen name="item/[id]" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="item/history/[id]" />
         <Stack.Screen name="outfit/build" options={{ presentation: 'modal' }} />
         <Stack.Screen name="outfit/[id]" />
+        <Stack.Screen name="settings" />
+        <Stack.Screen name="insights" />
+        <Stack.Screen name="packing-list" />
+        <Stack.Screen name="seasonal-archive" />
+        <Stack.Screen name="shopping-gaps" />
+        <Stack.Screen name="onboarding" options={{ presentation: 'modal' }} />
       </Stack>
     </SafeAreaProvider>
   );

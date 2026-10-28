@@ -9,12 +9,13 @@ import { PRESET_COLORS } from '../../lib/colorPalette';
 import { deleteItemPhoto, persistItemPhoto } from '../../lib/photoStorage';
 import type { ClothingCategory, ClothingItem, Formality, Pattern } from '../../lib/types';
 import { CLOTHING_CATEGORIES, FORMALITY_LEVELS, PATTERNS } from '../../lib/types';
+import { getCurrencySymbol } from '../../repo/appMeta';
 import { deleteItem, getItem, toggleItemFavorite, updateItem } from '../../repo/items';
 import { color, radius, space, type as textType } from '../../theme/tokens';
 import { Button } from '../../ui/Button';
 import { Chip } from '../../ui/Chip';
 import { ColorDot } from '../../ui/ColorDot';
-import { CameraIcon, CheckIcon, ChevronLeftIcon, StarIcon, TrashIcon } from '../../ui/icons';
+import { CameraIcon, CheckIcon, ChevronLeftIcon, ChevronRightIcon, LayersIcon, StarIcon, TrashIcon } from '../../ui/icons';
 
 const CATEGORY_LABEL: Record<ClothingCategory, string> = {
   top: 'Top',
@@ -54,13 +55,15 @@ export default function ItemDetailScreen() {
   const [pattern, setPattern] = useState<Pattern>('solid');
   const [formality, setFormality] = useState<Formality>('casual');
   const [favorite, setFavorite] = useState(false);
+  const [priceText, setPriceText] = useState('');
+  const [currencySymbol, setCurrencySymbol] = useState('$');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     async function load() {
       if (!id) return;
-      const item = await getItem(id);
+      const [item, symbol] = await Promise.all([getItem(id), getCurrencySymbol()]);
       if (cancelled || !item) return;
       setOriginal(item);
       setPhotoUri(item.photoUri);
@@ -70,6 +73,8 @@ export default function ItemDetailScreen() {
       setPattern(item.pattern);
       setFormality(item.formality);
       setFavorite(item.favorite);
+      setPriceText(item.purchasePrice !== null ? String(item.purchasePrice) : '');
+      setCurrencySymbol(symbol);
       setLoading(false);
     }
     void load();
@@ -131,6 +136,7 @@ export default function ItemDetailScreen() {
         storedPhotoUri = await persistItemPhoto(photoUri);
         deleteItemPhoto(original.photoUri);
       }
+      const parsedPrice = Number.parseFloat(priceText.replace(',', '.'));
       await updateItem(original.id, {
         category,
         name: name.trim(),
@@ -140,6 +146,8 @@ export default function ItemDetailScreen() {
         formality,
         photoUri: storedPhotoUri,
         favorite,
+        archived: original.archived,
+        purchasePrice: priceText.trim().length > 0 && Number.isFinite(parsedPrice) && parsedPrice >= 0 ? parsedPrice : null,
       });
       router.back();
     } catch (cause: unknown) {
@@ -242,6 +250,30 @@ export default function ItemDetailScreen() {
           ))}
         </View>
 
+        <Text style={[textType.label, { color: color.text3, marginTop: space.xl }]}>PRICE PAID (OPTIONAL)</Text>
+        <View style={styles.priceRow}>
+          <Text style={[textType.bodyMedium, { color: color.text2 }]}>{currencySymbol}</Text>
+          <TextInput
+            value={priceText}
+            onChangeText={setPriceText}
+            placeholder="0.00"
+            placeholderTextColor={color.text3}
+            keyboardType="decimal-pad"
+            style={styles.priceInput}
+          />
+        </View>
+
+        <Pressable
+          style={styles.historyRow}
+          onPress={() => router.push(`/item/history/${original.id}`)}
+          accessibilityRole="button"
+          accessibilityLabel="View wear history"
+        >
+          <LayersIcon size={18} color={color.text2} />
+          <Text style={[textType.body, { color: color.text1, flex: 1, marginLeft: space.xs }]}>Wear history</Text>
+          <ChevronRightIcon size={18} color={color.text3} />
+        </Pressable>
+
         <Button
           icon={(c) => <CheckIcon color={c} />}
           accessibilityLabel="Save changes"
@@ -330,5 +362,33 @@ const styles = StyleSheet.create({
   },
   swatchCellSelected: {
     borderColor: color.accent,
+  },
+  priceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.xs,
+    marginTop: space.sm,
+    backgroundColor: color.surface1,
+    borderWidth: 1,
+    borderColor: color.border,
+    borderRadius: radius.md,
+    paddingHorizontal: space.md,
+  },
+  priceInput: {
+    flex: 1,
+    paddingVertical: space.sm,
+    color: color.text1,
+    fontSize: 16,
+  },
+  historyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: space.lg,
+    backgroundColor: color.surface1,
+    borderWidth: 1,
+    borderColor: color.border,
+    borderRadius: radius.md,
+    paddingHorizontal: space.md,
+    paddingVertical: space.sm,
   },
 });

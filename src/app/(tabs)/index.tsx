@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { generateOutfits } from '../../lib/outfitGenerator';
 import type { ClothingItem, OutfitSuggestion } from '../../lib/types';
 import { createOutfit, getLastWornMap } from '../../repo/outfits';
-import { listItems } from '../../repo/items';
+import { listActiveItems } from '../../repo/items';
 import { Button } from '../../ui/Button';
 import { ColorDot } from '../../ui/ColorDot';
 import { EmptyState } from '../../ui/EmptyState';
@@ -34,7 +34,7 @@ export default function TodayScreen() {
     setLoading(true);
     try {
       const [items, lastWornAt]: [ClothingItem[], Map<string, string>] = await Promise.all([
-        listItems(),
+        listActiveItems(),
         getLastWornMap(),
       ]);
       setWardrobeSize(items.length);

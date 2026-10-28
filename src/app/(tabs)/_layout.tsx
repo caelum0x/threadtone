@@ -3,7 +3,7 @@ import { Tabs } from 'expo-router';
 import { StyleSheet } from 'react-native';
 
 import { color } from '../../theme/tokens';
-import { GridIcon, LayersIcon, SunIcon } from '../../ui/icons';
+import { GridIcon, LayersIcon, MenuIcon, SunIcon } from '../../ui/icons';
 
 export default function TabsLayout() {
   return (
@@ -28,6 +28,10 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="outfits"
         options={{ title: 'Outfits', tabBarIcon: ({ color: c }) => <LayersIcon color={String(c)} /> }}
+      />
+      <Tabs.Screen
+        name="more"
+        options={{ title: 'More', tabBarIcon: ({ color: c }) => <MenuIcon color={String(c)} /> }}
       />
     </Tabs>
   );

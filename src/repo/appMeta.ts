@@ -7,6 +7,8 @@
 import { db } from '../db/client';
 
 const ONBOARDING_COMPLETE_KEY = 'onboarding_complete';
+const CURRENCY_SYMBOL_KEY = 'currency_symbol';
+const DEFAULT_CURRENCY_SYMBOL = '$';
 
 async function getMeta(key: string): Promise<string | null> {
   const row = await db.getFirstAsync<{ value: string }>('SELECT value FROM app_meta WHERE key = ?;', [key]);
@@ -28,4 +30,14 @@ export async function isOnboardingComplete(): Promise<boolean> {
 
 export async function setOnboardingComplete(): Promise<void> {
   await setMeta(ONBOARDING_COMPLETE_KEY, '1');
+}
+
+/** Currency symbol used for cost-per-wear in Insights and the "price paid" field. */
+export async function getCurrencySymbol(): Promise<string> {
+  const value = await getMeta(CURRENCY_SYMBOL_KEY);
+  return value ?? DEFAULT_CURRENCY_SYMBOL;
+}
+
+export async function setCurrencySymbol(symbol: string): Promise<void> {
+  await setMeta(CURRENCY_SYMBOL_KEY, symbol);
 }

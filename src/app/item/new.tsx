@@ -1,6 +1,6 @@
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -10,6 +10,7 @@ import { detectDominantColor } from '../../lib/detectColor';
 import { persistItemPhoto } from '../../lib/photoStorage';
 import type { ClothingCategory, Formality, Pattern } from '../../lib/types';
 import { CLOTHING_CATEGORIES, FORMALITY_LEVELS, PATTERNS } from '../../lib/types';
+import { getCurrencySymbol } from '../../repo/appMeta';
 import { createItem } from '../../repo/items';
 import { color, radius, space, type as textType } from '../../theme/tokens';
 import { Button } from '../../ui/Button';
@@ -53,7 +54,13 @@ export default function NewItemScreen() {
   const [selectedHex, setSelectedHex] = useState<string | null>(null);
   const [pattern, setPattern] = useState<Pattern>('solid');
   const [formality, setFormality] = useState<Formality>('casual');
+  const [priceText, setPriceText] = useState('');
+  const [currencySymbol, setCurrencySymbol] = useState('$');
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    void getCurrencySymbol().then(setCurrencySymbol);
+  }, []);
 
   async function pickFromLibrary() {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -112,6 +119,7 @@ export default function NewItemScreen() {
       if (photoUri) {
         storedPhotoUri = await persistItemPhoto(photoUri);
       }
+      const parsedPrice = Number.parseFloat(priceText.replace(',', '.'));
       await createItem({
         category,
         name: name.trim(),
@@ -121,6 +129,8 @@ export default function NewItemScreen() {
         formality,
         photoUri: storedPhotoUri,
         favorite: false,
+        archived: false,
+        purchasePrice: Number.isFinite(parsedPrice) && parsedPrice >= 0 ? parsedPrice : null,
       });
       router.back();
     } catch (cause: unknown) {
@@ -215,6 +225,22 @@ export default function NewItemScreen() {
           ))}
         </View>
 
+        <Text style={[textType.label, { color: color.text3, marginTop: space.xl }]}>PRICE PAID (OPTIONAL)</Text>
+        <View style={styles.priceRow}>
+          <Text style={[textType.bodyMedium, { color: color.text2 }]}>{currencySymbol}</Text>
+          <TextInput
+            value={priceText}
+            onChangeText={setPriceText}
+            placeholder="0.00"
+            placeholderTextColor={color.text3}
+            keyboardType="decimal-pad"
+            style={styles.priceInput}
+          />
+        </View>
+        <Text style={[textType.caption, { color: color.text3, marginTop: space.xxs }]}>
+          Used for cost-per-wear in Insights — leave blank if you&apos;d rather not track it.
+        </Text>
+
         <Button
           icon={(c) => <CheckIcon color={c} />}
           accessibilityLabel="Save item"
@@ -307,5 +333,22 @@ const styles = StyleSheet.create({
   },
   swatchCellSelected: {
     borderColor: color.accent,
+  },
+  priceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.xs,
+    marginTop: space.sm,
+    backgroundColor: color.surface1,
+    borderWidth: 1,
+    borderColor: color.border,
+    borderRadius: radius.md,
+    paddingHorizontal: space.md,
+  },
+  priceInput: {
+    flex: 1,
+    paddingVertical: space.sm,
+    color: color.text1,
+    fontSize: 16,
   },
 });

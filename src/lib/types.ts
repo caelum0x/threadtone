@@ -32,6 +32,10 @@ export interface ClothingItem {
   formality: Formality;
   photoUri: string | null;
   favorite: boolean;
+  /** Off-season/stored pieces: still owned, excluded from Today's suggestions and the outfit builder. */
+  archived: boolean;
+  /** Optional price paid, used for cost-per-wear in Insights. Null when not entered. */
+  purchasePrice: number | null;
   createdAt: string;
 }
 

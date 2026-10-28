@@ -141,6 +141,81 @@ export function LayersIcon({ size = 24, color = '#F7F8F8', strokeWidth = 2 }: Ic
   );
 }
 
+export function SettingsIcon({ size = 24, color = '#F7F8F8', strokeWidth = 2 }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Circle cx="12" cy="12" r="3.2" stroke={color} strokeWidth={strokeWidth} />
+      <Path
+        d="M12 3.5v2.2M12 18.3v2.2M20.5 12h-2.2M5.7 12H3.5M18 6l-1.6 1.6M7.6 16.4 6 18M18 18l-1.6-1.6M7.6 7.6 6 6"
+        stroke={color}
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+      />
+    </Svg>
+  );
+}
+
+export function MenuIcon({ size = 24, color = '#F7F8F8', strokeWidth = 2 }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Line x1="4" y1="7" x2="20" y2="7" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
+      <Line x1="4" y1="12" x2="20" y2="12" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
+      <Line x1="4" y1="17" x2="20" y2="17" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+export function ArchiveIcon({ size = 24, color = '#F7F8F8', strokeWidth = 2, filled = false }: IconProps & { filled?: boolean }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M4 5h16v4H4Z"
+        stroke={color}
+        strokeWidth={strokeWidth}
+        strokeLinejoin="round"
+        fill={filled ? color : 'none'}
+      />
+      <Path d="M5.5 9v9.5a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V9" stroke={color} strokeWidth={strokeWidth} strokeLinejoin="round" />
+      <Line x1="9.5" y1="13" x2="14.5" y2="13" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+export function SuitcaseIcon({ size = 24, color = '#F7F8F8', strokeWidth = 2 }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M9 6.5V5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 5v1.5" stroke={color} strokeWidth={strokeWidth} strokeLinejoin="round" />
+      <Path d="M4.5 8.5a1 1 0 0 1 1-1h13a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-13a1 1 0 0 1-1-1Z" stroke={color} strokeWidth={strokeWidth} strokeLinejoin="round" />
+      <Line x1="4.5" y1="13" x2="19.5" y2="13" stroke={color} strokeWidth={strokeWidth} />
+    </Svg>
+  );
+}
+
+export function ChartIcon({ size = 24, color = '#F7F8F8', strokeWidth = 2 }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Line x1="5" y1="20" x2="5" y2="13" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
+      <Line x1="12" y1="20" x2="12" y2="8" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
+      <Line x1="19" y1="20" x2="19" y2="4" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+export function LightbulbIcon({ size = 24, color = '#F7F8F8', strokeWidth = 2 }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M12 3.5a5.5 5.5 0 0 0-3 10.1c.6.4 1 1.1 1 1.9v.5h4v-.5c0-.8.4-1.5 1-1.9A5.5 5.5 0 0 0 12 3.5Z"
+        stroke={color}
+        strokeWidth={strokeWidth}
+        strokeLinejoin="round"
+      />
+      <Line x1="10" y1="19" x2="14" y2="19" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
+      <Line x1="10.5" y1="21" x2="13.5" y2="21" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
+    </Svg>
+  );
+}
+
 export function SunIcon({ size = 24, color = '#F7F8F8', strokeWidth = 2 }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">

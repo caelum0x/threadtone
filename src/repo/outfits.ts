@@ -70,3 +70,8 @@ export async function toggleOutfitFavorite(id: string, favorite: boolean): Promi
 export async function deleteOutfit(id: string): Promise<void> {
   await db.runAsync('DELETE FROM outfits WHERE id = ?;', [id]);
 }
+
+/** Deletes every logged/built outfit. Used by the "Clear wardrobe data" settings action. */
+export async function deleteAllOutfits(): Promise<void> {
+  await db.runAsync('DELETE FROM outfits;');
+}

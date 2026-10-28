@@ -16,6 +16,8 @@ export interface ItemRow {
   formality: string;
   photo_uri: string | null;
   favorite: number;
+  archived: number;
+  purchase_price: number | null;
   created_at: string;
 }
 
@@ -39,6 +41,8 @@ export function mapItemRow(row: ItemRow): ClothingItem {
     formality: row.formality as Formality,
     photoUri: row.photo_uri,
     favorite: row.favorite === 1,
+    archived: row.archived === 1,
+    purchasePrice: row.purchase_price,
     createdAt: row.created_at,
   };
 }
