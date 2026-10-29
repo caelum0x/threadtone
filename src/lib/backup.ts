@@ -177,6 +177,23 @@ function isHexColor(value: unknown): value is string {
   return typeof value === 'string' && /^#[0-9a-fA-F]{6}$/.test(value);
 }
 
+/**
+ * `isValidBackupItem` (below) never shape-checks `photoExtension` — it's
+ * only ever read, not validated, before being spliced straight into a real
+ * file path (`${newId()}.${photoExtension}`) a few lines down in
+ * `importBackup`. A crafted backup file can set it to something like
+ * `"../../../../Documents/wardrobe-items/x"`, which `Paths.join`/`File`
+ * normalizes `..` segments through (confirmed against the real, installed
+ * expo-file-system path-joining logic), landing the decoded photo bytes at
+ * an attacker-chosen path elsewhere in the app's own sandbox instead of the
+ * intended temp-import folder — a real path-traversal write, not just a
+ * theoretical one. Restricting to a short alphanumeric token (the only
+ * shape a real image extension ever has) closes it at the point of use.
+ */
+function sanitizePhotoExtension(value: unknown): string {
+  return typeof value === 'string' && /^[a-zA-Z0-9]{1,8}$/.test(value) ? value : 'jpg';
+}
+
 /** Rejects a malformed backup item rather than inserting bad data (never trust external file content). */
 function isValidBackupItem(value: unknown): value is BackupItem {
   if (typeof value !== 'object' || value === null) return false;
@@ -232,7 +249,7 @@ export async function importBackup(fileUri: string): Promise<ImportSummary> {
       try {
         const tempDir = new Directory(Paths.cache, 'wearday-import');
         if (!tempDir.exists) tempDir.create({ intermediates: true });
-        tempFile = new File(tempDir, `${newId()}.${backupItem.photoExtension ?? 'jpg'}`);
+        tempFile = new File(tempDir, `${newId()}.${sanitizePhotoExtension(backupItem.photoExtension)}`);
         await tempFile.write(backupItem.photoBase64, { encoding: 'base64' });
         photoUri = await persistItemPhoto(tempFile.uri);
       } catch {
