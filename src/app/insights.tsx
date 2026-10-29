@@ -108,7 +108,17 @@ export default function InsightsScreen() {
     [items, wornCounts],
   );
 
-  const closetGaps = useMemo(() => findClosetGaps(items).filter((g) => g.severity !== 'fine'), [items]);
+  // Closet gaps ("what should I buy") must only count pieces that are
+  // actually in rotation right now — matching shopping-gaps.tsx's own use of
+  // listActiveItems(). Using the full `items` list (including archived
+  // off-season pieces, see seasonal-archive.tsx) let an archived category
+  // with 2+ stored pieces silently read as "fine" here even when the
+  // Shopping gaps screen correctly flagged the same wardrobe's 0 *active*
+  // pieces in that category as "missing" for the exact same data.
+  const closetGaps = useMemo(
+    () => findClosetGaps(items.filter((i) => !i.archived)).filter((g) => g.severity !== 'fine'),
+    [items],
+  );
   const monthBuckets = useMemo(() => wearsByMonth(outfits), [outfits]);
   const maxMonthCount = Math.max(1, ...monthBuckets.map((b) => b.count));
 
