@@ -24,6 +24,20 @@ const FORMALITY_RANK: Record<Formality, number> = {
 
 const BOLD_PATTERNS: Pattern[] = ['striped', 'plaid', 'floral', 'graphic'];
 
+/**
+ * Hard ceiling on how many top+bottom/outerwear/shoes/accessory combinations
+ * `generateOutfits` will build and score. Without this, the nested loops
+ * below materialize the full cartesian product of every slot — for a
+ * realistically-sized digitized closet (e.g. 40 tops, 30 bottoms, 15
+ * outerwear, 20 shoes, 25 accessories: this is exactly the "photograph
+ * everything you own" use case the app is built for) that is ~10 million
+ * item-array allocations, which reliably exhausts the JS heap and crashes
+ * the app before a single suggestion is ever shown. 50,000 keeps the search
+ * exhaustive (and therefore unchanged) for every closet size seen in
+ * practice while bounding worst-case memory/time for outlier wardrobes.
+ */
+const MAX_COMBINATIONS_EXAMINED = 50_000;
+
 /** How many days until a recently-worn piece is scored as fully "fresh" again. */
 const FRESHNESS_LOOKBACK_DAYS = 7;
 
@@ -200,10 +214,11 @@ export function generateOutfits(wardrobe: ClothingItem[], options: GenerateOptio
   const shoeOptions: (ClothingItem | null)[] = byCategory.shoes.length > 0 ? byCategory.shoes : [null];
   const accessoryOptions: (ClothingItem | null)[] = [null, ...byCategory.accessory];
 
-  for (const base of bases) {
+  buildCombinations: for (const base of bases) {
     for (const outerwear of outerwearOptions) {
       for (const shoes of shoeOptions) {
         for (const accessory of accessoryOptions) {
+          if (combinations.length >= MAX_COMBINATIONS_EXAMINED) break buildCombinations;
           const combo = [base, outerwear, shoes, accessory]
             .flat()
             .filter((item): item is ClothingItem => item !== null);
