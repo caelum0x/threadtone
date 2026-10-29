@@ -262,7 +262,14 @@ export async function importBackup(fileUri: string): Promise<ImportSummary> {
 
   let outfitsImported = 0;
   for (const backupOutfit of parsed.outfits) {
-    if (!Array.isArray(backupOutfit.itemIds)) continue;
+    // `isBackupFile` only validates that `outfits` is an array, not the shape
+    // of each entry — a hand-edited or corrupted backup can legally contain
+    // `null`/non-object entries in otherwise-valid JSON. Guard before
+    // touching `.itemIds` so one bad entry can't throw and abort the whole
+    // import (same "never trust external file content" principle already
+    // applied to items via `isValidBackupItem` above).
+    if (typeof backupOutfit !== 'object' || backupOutfit === null) continue;
+    if (!Array.isArray((backupOutfit as BackupOutfit).itemIds)) continue;
     const remappedItemIds = backupOutfit.itemIds.map((id) => idMap.get(id)).filter((id): id is string => Boolean(id));
     if (remappedItemIds.length === 0) continue;
 
