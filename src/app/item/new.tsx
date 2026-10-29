@@ -8,6 +8,7 @@ import { nameColor } from '../../lib/colorTheory';
 import { PRESET_COLORS } from '../../lib/colorPalette';
 import { detectDominantColor } from '../../lib/detectColor';
 import { persistItemPhoto } from '../../lib/photoStorage';
+import { parsePriceInput } from '../../lib/price';
 import type { ClothingCategory, Formality, Pattern } from '../../lib/types';
 import { CLOTHING_CATEGORIES, FORMALITY_LEVELS, PATTERNS } from '../../lib/types';
 import { getCurrencySymbol } from '../../repo/appMeta';
@@ -119,7 +120,7 @@ export default function NewItemScreen() {
       if (photoUri) {
         storedPhotoUri = await persistItemPhoto(photoUri);
       }
-      const parsedPrice = Number.parseFloat(priceText.replace(',', '.'));
+      const parsedPrice = parsePriceInput(priceText);
       await createItem({
         category,
         name: name.trim(),

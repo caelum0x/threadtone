@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { nameColor } from '../../lib/colorTheory';
 import { PRESET_COLORS } from '../../lib/colorPalette';
 import { deleteItemPhoto, persistItemPhoto } from '../../lib/photoStorage';
+import { parsePriceInput } from '../../lib/price';
 import type { ClothingCategory, ClothingItem, Formality, Pattern } from '../../lib/types';
 import { CLOTHING_CATEGORIES, FORMALITY_LEVELS, PATTERNS } from '../../lib/types';
 import { getCurrencySymbol } from '../../repo/appMeta';
@@ -136,7 +137,7 @@ export default function ItemDetailScreen() {
         storedPhotoUri = await persistItemPhoto(photoUri);
         deleteItemPhoto(original.photoUri);
       }
-      const parsedPrice = Number.parseFloat(priceText.replace(',', '.'));
+      const parsedPrice = parsePriceInput(priceText);
       await updateItem(original.id, {
         category,
         name: name.trim(),
