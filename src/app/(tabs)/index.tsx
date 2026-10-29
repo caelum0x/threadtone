@@ -25,7 +25,6 @@ export default function TodayScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [wardrobeSize, setWardrobeSize] = useState(0);
   const [suggestions, setSuggestions] = useState<OutfitSuggestion[]>([]);
   const [index, setIndex] = useState(0);
   const [logged, setLogged] = useState(false);
@@ -37,7 +36,6 @@ export default function TodayScreen() {
         listActiveItems(),
         getLastWornMap(),
       ]);
-      setWardrobeSize(items.length);
       const generated = generateOutfits(items, { limit: 8, lastWornAt });
       setSuggestions(generated);
       setIndex(dateSeedIndex(generated.length));
@@ -87,7 +85,15 @@ export default function TodayScreen() {
     );
   }
 
-  if (wardrobeSize < 2 || suggestions.length === 0) {
+  // `generateOutfits` itself already returns [] when there's nothing it can
+  // build (no dress and no top+bottom pair) — see outfitGenerator.ts. Gating
+  // on `wardrobeSize < 2` here as well wrongly blocked a real, valid, single-
+  // dress wardrobe (wardrobeSize === 1): the generator happily produces a
+  // one-item dress suggestion (that's the whole point of the "single piece"
+  // colorScore case fixed earlier today), but this screen never let the user
+  // see it, showing "Add at least one top and one bottom (or a dress)" even
+  // though they already had exactly that dress.
+  if (suggestions.length === 0) {
     return (
       <View style={{ flex: 1, backgroundColor: color.bg, paddingTop: insets.top }}>
         <EmptyState
