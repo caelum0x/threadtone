@@ -77,8 +77,20 @@ export function hexToHsl(hex: string): Hsl {
 export function isNeutral({ h, s, l }: Hsl): boolean {
   if (s <= 12) return true; // true black / white / gray
   if (l <= 18 && s <= 45) return true; // near-black, incl. dark brown/navy
-  if (l >= 90 && s <= 20) return true; // near-white / cream
-  if (h >= 15 && h <= 45 && s <= 35 && l >= 22 && l <= 78) return true; // beige/tan/khaki/brown
+  // Near-white/cream: HSL's saturation formula inflates sharply as lightness
+  // approaches 100 (small denominator), so even a barely-tinted near-white
+  // can read as s=20-plus. A real off-white (#F5F5F0, s=20) and a real cream
+  // (#F2E6D8, s=50) both need to clear this, not just true grayscale whites.
+  if (l >= 88 && s <= 55) return true;
+  // Beige/tan/khaki/brown family. Saturation genuinely runs higher for the
+  // same perceived "muted warm neutral" as lightness drops (a leather-brown
+  // like #5B3A29 computes s=38, well above a pale khaki's s=29), so the
+  // ceiling is widened for the darker half of the band rather than using one
+  // flat cutoff across the whole 19-78 lightness range.
+  if (h >= 15 && h <= 45 && l >= 19 && l <= 78) {
+    const maxSaturation = l <= 40 ? 50 : 35;
+    if (s <= maxSaturation) return true;
+  }
   if (h >= 200 && h <= 250 && l <= 30) return true; // navy
   return false;
 }
@@ -128,13 +140,21 @@ export function harmonyLabel(kind: HarmonyKind): string {
 /** Human color name for a hex swatch, shown in the UI next to the dot. */
 export function nameColor(hex: string): string {
   const hsl = hexToHsl(hex);
-  if (hsl.s <= 8) {
+  // Matches isNeutral's own "true black / white / gray" cutoff (s <= 12) —
+  // this used to be a stricter s <= 8, which let a real charcoal like
+  // #2E3238 (s=10) slip past this shortcut and get caught by the navy
+  // hue-range check below instead, mislabeling it "Navy".
+  if (hsl.s <= 12) {
     if (hsl.l <= 10) return 'Black';
     if (hsl.l >= 92) return 'White';
     return hsl.l < 45 ? 'Charcoal' : 'Gray';
   }
   if (isNeutral(hsl)) {
     if (hsl.h >= 200 && hsl.h <= 250 && hsl.l <= 30) return 'Navy';
+    // A near-white with a faint warm tint (#F5F5F0: l=95, s=20) should still
+    // read as "White", not "Cream" — only the more visibly tinted, lower-
+    // saturation-but-still-pale tones (#F2E6D8: l=90, s=50) are "Cream".
+    if (hsl.l >= 90 && hsl.s <= 30) return 'White';
     if (hsl.l >= 78) return 'Cream';
     if (hsl.l <= 30) return 'Brown';
     return 'Beige';
