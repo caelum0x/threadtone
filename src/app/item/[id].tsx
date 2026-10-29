@@ -133,9 +133,17 @@ export default function ItemDetailScreen() {
     setSaving(true);
     try {
       let storedPhotoUri = original.photoUri;
+      // Only remember the old photo for cleanup here — don't delete it yet.
+      // Deleting it before `updateItem` below is confirmed to succeed would,
+      // if that write throws (a real failure mode: SQLite "database is
+      // locked"/disk-full, not hypothetical — this exact app's own session
+      // history documents both happening on this device), leave the item's
+      // DB row still pointing at a photo file that's already gone, with no
+      // way to recover it short of replacing the photo again.
+      let previousPhotoUri: string | null = null;
       if (photoUri && photoUri !== original.photoUri) {
         storedPhotoUri = await persistItemPhoto(photoUri);
-        deleteItemPhoto(original.photoUri);
+        previousPhotoUri = original.photoUri;
       }
       const parsedPrice = parsePriceInput(priceText);
       await updateItem(original.id, {
@@ -150,6 +158,9 @@ export default function ItemDetailScreen() {
         archived: original.archived,
         purchasePrice: priceText.trim().length > 0 && Number.isFinite(parsedPrice) && parsedPrice >= 0 ? parsedPrice : null,
       });
+      // The DB row now safely points at the new photo — only now is it safe
+      // to delete the old one.
+      if (previousPhotoUri) deleteItemPhoto(previousPhotoUri);
       router.back();
     } catch (cause: unknown) {
       const message = cause instanceof Error ? cause.message : 'Could not update this item.';
