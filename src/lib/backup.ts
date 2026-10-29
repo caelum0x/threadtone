@@ -194,6 +194,23 @@ function sanitizePhotoExtension(value: unknown): string {
   return typeof value === 'string' && /^[a-zA-Z0-9]{1,8}$/.test(value) ? value : 'jpg';
 }
 
+/**
+ * Same "never trust external file content" gap as `photoExtension` above,
+ * different field: `importBackup` used to accept any `typeof === 'number'`
+ * value for `purchasePrice`, including non-finite doubles. A JSON number
+ * literal like `1e400` is syntactically valid JSON but overflows IEEE754
+ * double range on parse, yielding `Infinity` — `typeof Infinity === 'number'`
+ * so it sailed straight through. That `Infinity` (or a negative price) then
+ * corrupts Insights' "most expensive per wear" ranking app-wide (renders
+ * literally as "Infinity" and always sorts first, permanently crowding out
+ * real items). Every other write path in this app (item/new.tsx,
+ * item/[id].tsx) already guards prices with `Number.isFinite(x) && x >= 0`
+ * — importBackup was the one path that didn't.
+ */
+function sanitizePurchasePrice(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : null;
+}
+
 /** Rejects a malformed backup item rather than inserting bad data (never trust external file content). */
 function isValidBackupItem(value: unknown): value is BackupItem {
   if (typeof value !== 'object' || value === null) return false;
@@ -270,7 +287,7 @@ export async function importBackup(fileUri: string): Promise<ImportSummary> {
       photoUri,
       favorite: backupItem.favorite,
       archived: backupItem.archived,
-      purchasePrice: typeof backupItem.purchasePrice === 'number' ? backupItem.purchasePrice : null,
+      purchasePrice: sanitizePurchasePrice(backupItem.purchasePrice),
     };
 
     const created = await createItem(newItem);
