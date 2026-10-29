@@ -98,7 +98,9 @@ function buildReasons(
   const names = items.map((item) => item.colorName.toLowerCase());
   const uniqueNames = [...new Set(names)];
 
-  if (colorLabel === 'neutral base') {
+  if (colorLabel === 'single piece') {
+    reasons.push('Just one piece — nothing to clash with yet.');
+  } else if (colorLabel === 'neutral base') {
     reasons.push('Neutral pieces that pair safely with anything in your closet.');
   } else if (colorLabel === 'complementary contrast') {
     reasons.push(`${capitalize(uniqueNames[0] ?? '')} and ${uniqueNames[1] ?? 'the rest'} sit opposite on the color wheel for a crisp, intentional contrast.`);
