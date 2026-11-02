@@ -21,9 +21,22 @@ export interface CategoryGap {
 }
 
 export function findClosetGaps(wardrobe: ClothingItem[]): CategoryGap[] {
+  const dressCount = wardrobe.filter((item) => item.category === 'dress').length;
   return CLOTHING_CATEGORIES.map((category) => {
     const count = wardrobe.filter((item) => item.category === category).length;
-    const severity: CategoryGap['severity'] = count === 0 ? 'missing' : count === 1 ? 'low' : 'fine';
+    // A dress is a self-contained base outfit on its own — outfitGenerator.ts's
+    // `bases` array is built from top+bottom pairs OR a dress, never a dress
+    // combined with a top/bottom. So a wardrobe with 2+ dresses already has
+    // real, buildable base outfits regardless of how many tops/bottoms it
+    // owns; treating 0-1 tops/bottoms as "missing"/"low" in that case is
+    // mathematically wrong (contradicts this exact function's own doc
+    // comment) and misleads the user into buying tops/bottoms they don't
+    // need. Confirmed via a real repro: a wardrobe of 4 dresses + 2 shoes +
+    // 1 outerwear + 2 accessories (0 tops, 0 bottoms) already builds 48 real
+    // outfits via generateOutfits, yet this function used to report both
+    // "top" and "bottom" as severity "missing".
+    const hasDressCoverage = (category === 'top' || category === 'bottom') && dressCount >= 2;
+    const severity: CategoryGap['severity'] = hasDressCoverage ? 'fine' : count === 0 ? 'missing' : count === 1 ? 'low' : 'fine';
     return { category, count, severity };
   });
 }
