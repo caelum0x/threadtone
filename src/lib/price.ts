@@ -39,5 +39,21 @@ export function parsePriceInput(rawText: string): number {
     return Number.parseFloat(normalized);
   }
 
+  if (lastDot !== -1) {
+    // Only dots: the mirror image of the comma-only case above, for the
+    // European convention where '.' is the thousands separator and ','
+    // is the decimal mark (so a price typed without any comma, e.g.
+    // "2.500" for a real EUR2,500 item, uses '.' purely as a thousands
+    // group). Falling straight through to `Number.parseFloat(text)` here
+    // used to read "2.500" as 2.5 and "1.000" as 1 — the exact same
+    // 1/1000th corruption already fixed above for the comma case, just
+    // via the other separator. Exactly 3 trailing digits is a thousands
+    // group; 1-2 trailing digits is a real US-style decimal ("19.99",
+    // "1200.50"), left untouched.
+    const trailingDigits = text.length - lastDot - 1;
+    const normalized = trailingDigits === 3 ? text.replace(/\./g, '') : text;
+    return Number.parseFloat(normalized);
+  }
+
   return Number.parseFloat(text);
 }
