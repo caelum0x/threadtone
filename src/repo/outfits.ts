@@ -15,6 +15,18 @@ export async function listOutfits(): Promise<Outfit[]> {
 }
 
 /**
+ * Favorited outfits only, newest first — feeds the Today screen's "Your
+ * saved looks" quick-wear strip (see (tabs)/index.tsx). Favoriting an outfit
+ * (outfit/[id].tsx's star toggle) was previously a dead end: the flag was
+ * stored and shown as a star badge in the Outfits history list, but nothing
+ * ever read it back to let the user actually re-wear a go-to combo.
+ */
+export async function listFavoriteOutfits(): Promise<Outfit[]> {
+  const rows = await db.getAllAsync<OutfitRow>('SELECT * FROM outfits WHERE favorite = 1 ORDER BY created_at DESC;');
+  return rows.map(mapOutfitRow);
+}
+
+/**
  * Item id -> the most recent ISO timestamp that item was logged as worn,
  * across every saved outfit. Feeds the outfit generator's freshness scoring
  * (src/lib/outfitGenerator.ts) so it can favor pieces that haven't been worn
