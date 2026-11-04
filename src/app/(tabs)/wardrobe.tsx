@@ -9,7 +9,7 @@ import { listItems } from '../../repo/items';
 import { color, radius, space, type as textType } from '../../theme/tokens';
 import { Chip } from '../../ui/Chip';
 import { EmptyState } from '../../ui/EmptyState';
-import { GridIcon, PlusIcon, StarIcon } from '../../ui/icons';
+import { GridIcon, LayersIcon, PlusIcon, StarIcon } from '../../ui/icons';
 import { ItemThumbnail } from '../../ui/ItemThumbnail';
 
 const CATEGORY_LABEL: Record<ClothingCategory, string> = {
@@ -50,14 +50,24 @@ export default function WardrobeScreen() {
     <View style={{ flex: 1, backgroundColor: color.bg, paddingTop: insets.top }}>
       <View style={styles.header}>
         <Text style={textType.title}>Wardrobe</Text>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Add item"
-          style={styles.addButton}
-          onPress={() => router.push('/item/new')}
-        >
-          <PlusIcon size={20} color={color.accentFg} />
-        </Pressable>
+        <View style={styles.headerActions}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Browse by color"
+            style={styles.browseButton}
+            onPress={() => router.push('/closet/browse')}
+          >
+            <LayersIcon size={18} color={color.text1} />
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Add item"
+            style={styles.addButton}
+            onPress={() => router.push('/item/new')}
+          >
+            <PlusIcon size={20} color={color.accentFg} />
+          </Pressable>
+        </View>
       </View>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filters} contentContainerStyle={styles.filtersContent}>
@@ -124,6 +134,20 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: space.lg,
     paddingTop: space.md,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.sm,
+  },
+  browseButton: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: color.border,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   addButton: {
     width: 40,

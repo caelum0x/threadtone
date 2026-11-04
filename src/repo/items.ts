@@ -4,7 +4,7 @@
  */
 import { db } from '../db/client';
 import { newId } from '../db/ids';
-import type { ClothingItem, NewClothingItem } from '../lib/types';
+import type { ClothingCategory, ClothingItem, NewClothingItem } from '../lib/types';
 import { type ItemRow, mapItemRow } from './rows';
 
 export async function listItems(): Promise<ClothingItem[]> {
@@ -20,6 +20,34 @@ export async function listItems(): Promise<ClothingItem[]> {
 export async function listActiveItems(): Promise<ClothingItem[]> {
   const rows = await db.getAllAsync<ItemRow>('SELECT * FROM items WHERE archived = 0 ORDER BY created_at DESC;');
   return rows.map(mapItemRow);
+}
+
+/**
+ * Every owned item in one category+color cell — backs the closet/[category]/[color]
+ * browse-by-color detail screen. Includes archived pieces, matching listItems()'s
+ * own scope, so a cell's count always matches what the browse index shows.
+ */
+export async function listItemsByCategoryAndColor(
+  category: ClothingCategory,
+  colorHex: string,
+): Promise<ClothingItem[]> {
+  const rows = await db.getAllAsync<ItemRow>(
+    'SELECT * FROM items WHERE category = ? AND color_hex = ? ORDER BY created_at DESC;',
+    [category, colorHex],
+  );
+  return rows.map(mapItemRow);
+}
+
+/**
+ * Real per-cell counts for the whole category x color matrix in one query,
+ * keyed `${category}:${colorHex}`. Backs the closet/browse index so every
+ * cell shows how many items are actually in it, without 120 separate queries.
+ */
+export async function countItemsByCategoryColorMatrix(): Promise<Map<string, number>> {
+  const rows = await db.getAllAsync<{ category: string; color_hex: string; count: number }>(
+    'SELECT category, color_hex, COUNT(*) as count FROM items GROUP BY category, color_hex;',
+  );
+  return new Map(rows.map((row) => [`${row.category}:${row.color_hex}`, row.count]));
 }
 
 export async function getItem(id: string): Promise<ClothingItem | null> {
