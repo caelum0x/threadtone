@@ -242,6 +242,54 @@ export function DownloadIcon({ size = 24, color = '#F7F8F8', strokeWidth = 2 }: 
   );
 }
 
+export function CrownIcon({ size = 24, color = '#F7F8F8', strokeWidth = 2 }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M3.5 9.5 7 12l2.2-5L12 11.5 14.8 7 17 12l3.5-2.5-1.6 9.2H5.1Z"
+        stroke={color}
+        strokeWidth={strokeWidth}
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+      <Line x1="5.5" y1="19.2" x2="18.5" y2="19.2" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+export function RefreshIcon({ size = 24, color = '#F7F8F8', strokeWidth = 2 }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M4.5 12a7.5 7.5 0 0 1 12.8-5.3L19.5 8.7"
+        stroke={color}
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Polyline points="19.5 4.5 19.5 8.7 15.3 8.7" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
+      <Path
+        d="M19.5 12a7.5 7.5 0 0 1-12.8 5.3L4.5 15.3"
+        stroke={color}
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Polyline points="4.5 19.5 4.5 15.3 8.7 15.3" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
+export function LockIcon({ size = 24, color = '#F7F8F8', strokeWidth = 2 }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M6.5 10.5h11a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1Z" stroke={color} strokeWidth={strokeWidth} strokeLinejoin="round" />
+      <Path d="M8.5 10.5V7a3.5 3.5 0 0 1 7 0v3.5" stroke={color} strokeWidth={strokeWidth} strokeLinejoin="round" />
+      <Line x1="12" y1="14.5" x2="12" y2="17" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
+    </Svg>
+  );
+}
+
 export function UploadIcon({ size = 24, color = '#F7F8F8', strokeWidth = 2 }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">

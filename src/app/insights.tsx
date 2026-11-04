@@ -11,14 +11,18 @@ import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { canViewInsights } from '../billing/entitlement';
+import { usePremiumStatus } from '../billing/usePremiumStatus';
 import { findClosetGaps } from '../lib/shoppingGaps';
 import type { ClothingCategory, ClothingItem, Outfit } from '../lib/types';
 import { getCurrencySymbol } from '../repo/appMeta';
 import { listItems } from '../repo/items';
 import { listOutfits } from '../repo/outfits';
 import { color, radius, space, type as textType } from '../theme/tokens';
+import { Button } from '../ui/Button';
 import { EmptyState } from '../ui/EmptyState';
-import { ChartIcon, ChevronLeftIcon } from '../ui/icons';
+import { GlassCard } from '../ui/GlassCard';
+import { ChartIcon, ChevronLeftIcon, CrownIcon } from '../ui/icons';
 import { ItemThumbnail } from '../ui/ItemThumbnail';
 
 const CATEGORY_LABEL: Record<ClothingCategory, string> = {
@@ -68,20 +72,27 @@ function wearsByMonth(outfits: Outfit[], months = 6): { key: string; count: numb
 export default function InsightsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { isPremium, loading: premiumLoading } = usePremiumStatus();
 
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState<ClothingItem[]>([]);
   const [outfits, setOutfits] = useState<Outfit[]>([]);
   const [currencySymbol, setCurrencySymbolState] = useState('$');
 
+  const canView = canViewInsights(isPremium);
+
   const load = useCallback(async () => {
+    if (premiumLoading || !canView) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     const [loadedItems, loadedOutfits, symbol] = await Promise.all([listItems(), listOutfits(), getCurrencySymbol()]);
     setItems(loadedItems);
     setOutfits(loadedOutfits);
     setCurrencySymbolState(symbol);
     setLoading(false);
-  }, []);
+  }, [canView, premiumLoading]);
 
   useFocusEffect(
     useCallback(() => {
@@ -121,6 +132,31 @@ export default function InsightsScreen() {
   );
   const monthBuckets = useMemo(() => wearsByMonth(outfits), [outfits]);
   const maxMonthCount = Math.max(1, ...monthBuckets.map((b) => b.count));
+
+  if (!premiumLoading && !canView) {
+    return (
+      <View style={{ flex: 1, backgroundColor: color.bg, paddingTop: insets.top }}>
+        {renderHeader(router)}
+        <View style={styles.content}>
+          <GlassCard style={styles.gateCard}>
+            <CrownIcon size={28} color={color.accent} />
+            <Text style={[textType.bodyMedium, { color: color.text1, marginTop: space.sm, textAlign: 'center' }]}>
+              Insights is a Wearday Plus feature
+            </Text>
+            <Text style={[textType.caption, { color: color.text2, marginTop: space.xs, textAlign: 'center' }]}>
+              Wear history, cost-per-wear, and closet gaps.
+            </Text>
+          </GlassCard>
+          <Button
+            icon={(c) => <CrownIcon color={c} />}
+            accessibilityLabel="Unlock Wearday Plus"
+            onPress={() => router.push('/paywall?feature=insights')}
+            style={{ marginTop: space.lg, alignSelf: 'center', width: 72 }}
+          />
+        </View>
+      </View>
+    );
+  }
 
   if (loading) {
     return (
@@ -259,6 +295,11 @@ const styles = StyleSheet.create({
   content: {
     padding: space.lg,
     paddingBottom: space.xxl,
+  },
+  gateCard: {
+    marginTop: space.xl,
+    padding: space.xl,
+    alignItems: 'center',
   },
   barChart: {
     flexDirection: 'row',

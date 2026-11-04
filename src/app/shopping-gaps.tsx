@@ -9,12 +9,16 @@ import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { canViewShoppingGaps } from '../billing/entitlement';
+import { usePremiumStatus } from '../billing/usePremiumStatus';
 import { countPossibleOutfits, findClosetGaps, findHardToMatchItems } from '../lib/shoppingGaps';
 import type { ClothingCategory, ClothingItem } from '../lib/types';
 import { listActiveItems } from '../repo/items';
 import { color, radius, space, type as textType } from '../theme/tokens';
+import { Button } from '../ui/Button';
 import { EmptyState } from '../ui/EmptyState';
-import { ChevronLeftIcon, LightbulbIcon } from '../ui/icons';
+import { GlassCard } from '../ui/GlassCard';
+import { ChevronLeftIcon, CrownIcon, LightbulbIcon } from '../ui/icons';
 import { ItemThumbnail } from '../ui/ItemThumbnail';
 
 const CATEGORY_LABEL: Record<ClothingCategory, string> = {
@@ -29,15 +33,22 @@ const CATEGORY_LABEL: Record<ClothingCategory, string> = {
 export default function ShoppingGapsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { isPremium, loading: premiumLoading } = usePremiumStatus();
 
   const [loading, setLoading] = useState(true);
   const [wardrobe, setWardrobe] = useState<ClothingItem[]>([]);
 
+  const canView = canViewShoppingGaps(isPremium);
+
   const load = useCallback(async () => {
+    if (premiumLoading || !canView) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setWardrobe(await listActiveItems());
     setLoading(false);
-  }, []);
+  }, [canView, premiumLoading]);
 
   useFocusEffect(
     useCallback(() => {
@@ -59,7 +70,25 @@ export default function ShoppingGapsScreen() {
         <View style={{ width: 24 }} />
       </View>
 
-      {loading ? (
+      {!premiumLoading && !canView ? (
+        <View style={styles.content}>
+          <GlassCard style={styles.gateCard}>
+            <CrownIcon size={28} color={color.accent} />
+            <Text style={[textType.bodyMedium, { color: color.text1, marginTop: space.sm, textAlign: 'center' }]}>
+              Shopping gaps is a Wearday Plus feature
+            </Text>
+            <Text style={[textType.caption, { color: color.text2, marginTop: space.xs, textAlign: 'center' }]}>
+              What would actually improve your closet.
+            </Text>
+          </GlassCard>
+          <Button
+            icon={(c) => <CrownIcon color={c} />}
+            accessibilityLabel="Unlock Wearday Plus"
+            onPress={() => router.push('/paywall?feature=shoppingGaps')}
+            style={{ marginTop: space.lg, alignSelf: 'center', width: 72 }}
+          />
+        </View>
+      ) : loading ? (
         <View style={styles.center}>
           <ActivityIndicator color={color.text1} />
         </View>
@@ -142,6 +171,11 @@ const styles = StyleSheet.create({
   content: {
     padding: space.lg,
     paddingBottom: space.xxl,
+  },
+  gateCard: {
+    marginTop: space.xl,
+    padding: space.xl,
+    alignItems: 'center',
   },
   card: {
     marginTop: space.sm,

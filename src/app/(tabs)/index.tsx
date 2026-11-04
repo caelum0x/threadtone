@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { generateOutfits } from '../../lib/outfitGenerator';
 import type { ClothingItem, Outfit, OutfitSuggestion } from '../../lib/types';
+import { isPlusPaywallShown, setPlusPaywallShown } from '../../repo/appMeta';
 import { createOutfit, getLastWornMap, listFavoriteOutfits } from '../../repo/outfits';
 import { listActiveItems, listItems } from '../../repo/items';
 import { Button } from '../../ui/Button';
@@ -81,13 +82,27 @@ export default function TodayScreen() {
       setLogged(false);
       setSavedLooks(buildSavedLooks(favorites, allItems));
       setWornLookId(null);
+
+      // The real "aha" moment in this app isn't onboarding — it's the first
+      // time there's an actual outfit suggestion to look at (a brand-new
+      // wardrobe has nothing to suggest yet). Per this account's App Store
+      // packaging rule, the Wearday Plus paywall is shown to every user
+      // once, right here, the first time that happens — not gated behind a
+      // feature tap days later. See src/repo/appMeta.ts / src/app/paywall.tsx.
+      if (generated.length > 0) {
+        const alreadyShown = await isPlusPaywallShown();
+        if (!alreadyShown) {
+          await setPlusPaywallShown();
+          router.push('/paywall?feature=today');
+        }
+      }
     } catch (cause: unknown) {
       const message = cause instanceof Error ? cause.message : 'Could not load your wardrobe.';
       Alert.alert('Something went wrong', message);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [router]);
 
   useFocusEffect(
     useCallback(() => {

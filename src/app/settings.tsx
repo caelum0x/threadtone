@@ -12,6 +12,8 @@ import { useCallback, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { canExportBackup } from '../billing/entitlement';
+import { usePremiumStatus } from '../billing/usePremiumStatus';
 import { exportBackup, importBackup } from '../lib/backup';
 import { deleteItemPhoto } from '../lib/photoStorage';
 import { getCurrencySymbol, setCurrencySymbol } from '../repo/appMeta';
@@ -23,9 +25,11 @@ import { GlassCard } from '../ui/GlassCard';
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
+  CrownIcon,
   DownloadIcon,
   HangerIcon,
   LayersIcon,
+  LockIcon,
   TrashIcon,
   UploadIcon,
 } from '../ui/icons';
@@ -40,6 +44,7 @@ function getErrorMessage(error: unknown): string {
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { isPremium } = usePremiumStatus();
 
   const [currency, setCurrency] = useState('$');
   const [itemCount, setItemCount] = useState(0);
@@ -67,6 +72,10 @@ export default function SettingsScreen() {
   }
 
   async function handleExport() {
+    if (!canExportBackup(isPremium)) {
+      router.push('/paywall?feature=export');
+      return;
+    }
     if (itemCount === 0) {
       Alert.alert('Nothing to back up yet', 'Add a few wardrobe items first, then come back here to export them.');
       return;
@@ -162,6 +171,19 @@ export default function SettingsScreen() {
           ))}
         </View>
 
+        <Text style={[textType.label, { color: color.text3, marginTop: space.xl }]}>WEARDAY PLUS</Text>
+        <Pressable
+          style={styles.row}
+          onPress={() => router.push('/paywall?feature=generic')}
+          disabled={isPremium}
+        >
+          <CrownIcon size={18} color={color.text2} />
+          <Text style={[textType.body, { color: color.text1, flex: 1, marginLeft: space.xs }]}>
+            {isPremium ? 'Wearday Plus — active' : 'Unlock Wearday Plus'}
+          </Text>
+          {isPremium ? null : <ChevronRightIcon size={18} color={color.text3} />}
+        </Pressable>
+
         <Text style={[textType.label, { color: color.text3, marginTop: space.xl }]}>ONBOARDING</Text>
         <Pressable style={styles.row} onPress={() => router.push('/onboarding')}>
           <HangerIcon size={18} color={color.text2} />
@@ -177,8 +199,10 @@ export default function SettingsScreen() {
         <Pressable style={styles.row} onPress={() => void handleExport()} disabled={exporting}>
           {exporting ? (
             <ActivityIndicator size="small" color={color.text2} />
-          ) : (
+          ) : canExportBackup(isPremium) ? (
             <DownloadIcon size={18} color={color.text2} />
+          ) : (
+            <LockIcon size={18} color={color.text3} />
           )}
           <Text style={[textType.body, { color: color.text1, flex: 1, marginLeft: space.xs }]}>
             {exporting ? 'Preparing backup…' : 'Export backup'}

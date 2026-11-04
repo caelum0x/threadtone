@@ -71,6 +71,7 @@ export default function RootLayout() {
         <Stack.Screen name="seasonal-archive" />
         <Stack.Screen name="shopping-gaps" />
         <Stack.Screen name="onboarding" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="paywall" options={{ presentation: 'modal' }} />
       </Stack>
     </SafeAreaProvider>
   );

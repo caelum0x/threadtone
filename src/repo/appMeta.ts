@@ -9,6 +9,9 @@ import { db } from '../db/client';
 const ONBOARDING_COMPLETE_KEY = 'onboarding_complete';
 const CURRENCY_SYMBOL_KEY = 'currency_symbol';
 const DEFAULT_CURRENCY_SYMBOL = '$';
+const PREMIUM_ACTIVE_KEY = 'premium_active';
+const PREMIUM_PRODUCT_ID_KEY = 'premium_product_id';
+const PLUS_PAYWALL_SHOWN_KEY = 'plus_paywall_shown';
 
 async function getMeta(key: string): Promise<string | null> {
   const row = await db.getFirstAsync<{ value: string }>('SELECT value FROM app_meta WHERE key = ?;', [key]);
@@ -40,4 +43,34 @@ export async function getCurrencySymbol(): Promise<string> {
 
 export async function setCurrencySymbol(symbol: string): Promise<void> {
   await setMeta(CURRENCY_SYMBOL_KEY, symbol);
+}
+
+/**
+ * On-device cache of the Wearday Plus entitlement (see src/billing/). Read
+ * first so gated screens render instantly offline; src/billing/usePremiumStatus.ts
+ * refreshes it from RevenueCat in the background and keeps it in sync.
+ */
+export async function getCachedPremiumActive(): Promise<boolean> {
+  const value = await getMeta(PREMIUM_ACTIVE_KEY);
+  return value === '1';
+}
+
+export async function setCachedPremiumActive(active: boolean, productId: string | null): Promise<void> {
+  await setMeta(PREMIUM_ACTIVE_KEY, active ? '1' : '0');
+  await setMeta(PREMIUM_PRODUCT_ID_KEY, productId ?? '');
+}
+
+/**
+ * Whether the automatic Wearday Plus paywall has already been shown once,
+ * right after the first real outfit suggestion (the app's actual value
+ * moment — see (tabs)/index.tsx). Shown to every user exactly once; after
+ * that, Plus is only offered on-demand from a gated screen or the More tab.
+ */
+export async function isPlusPaywallShown(): Promise<boolean> {
+  const value = await getMeta(PLUS_PAYWALL_SHOWN_KEY);
+  return value === '1';
+}
+
+export async function setPlusPaywallShown(): Promise<void> {
+  await setMeta(PLUS_PAYWALL_SHOWN_KEY, '1');
 }

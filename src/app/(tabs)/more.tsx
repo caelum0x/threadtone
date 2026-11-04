@@ -9,11 +9,13 @@ import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { usePremiumStatus } from '../../billing/usePremiumStatus';
 import { color, radius, space, type as textType } from '../../theme/tokens';
 import {
   ArchiveIcon,
   ChartIcon,
   ChevronRightIcon,
+  CrownIcon,
   LightbulbIcon,
   SettingsIcon,
   SuitcaseIcon,
@@ -30,8 +32,20 @@ interface MenuRow {
 export default function MoreScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { isPremium } = usePremiumStatus();
 
   const rows: MenuRow[] = [
+    ...(isPremium
+      ? []
+      : [
+          {
+            key: 'plus',
+            icon: <CrownIcon size={20} color={color.text1} />,
+            title: 'Wearday Plus',
+            subtitle: 'Unlock Insights, Shopping gaps, backup export',
+            route: '/paywall?feature=generic',
+          },
+        ]),
     {
       key: 'insights',
       icon: <ChartIcon size={20} color={color.text1} />,
