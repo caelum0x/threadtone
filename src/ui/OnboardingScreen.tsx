@@ -1,11 +1,18 @@
 /**
- * First-run onboarding: 3 screens explaining the core loop (digitize your
- * closet -> get a daily outfit suggestion -> shuffle or log what you
- * actually wore). Shown once; `RootLayout` only mounts this until
- * `setOnboardingComplete()` persists the flag to SQLite (see
- * src/repo/appMeta.ts), then swaps to the real tab navigator. Built from
- * the same GlassCard/Button/icon primitives as the rest of the app — no new
- * design patterns, no emoji, icon-only actions.
+ * First-run onboarding: 3 screens showing the real outcome, not a tutorial
+ * of how the app works — per this account's App Store packaging rule
+ * ("show the outcome, not how it works; never a tutorial"). Each step is a
+ * real-screen mockup (src/ui/OnboardingMockup.tsx) built from the exact
+ * primitives the live Wardrobe/Today screens use — a populated wardrobe
+ * grid, a real outfit suggestion with its match score, the shuffle/log
+ * actions and the saved look they produce — with one short caption, not an
+ * abstract icon and a paragraph of feature explanation.
+ *
+ * Shown once; `RootLayout` only mounts this until `setOnboardingComplete()`
+ * persists the flag to SQLite (see src/repo/appMeta.ts), then swaps to the
+ * real tab navigator. Built from the same GlassCard/Button/icon primitives
+ * as the rest of the app — no new design patterns, no emoji, icon-only
+ * actions.
  */
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -15,33 +22,18 @@ import { setOnboardingComplete } from '../repo/appMeta';
 import { color, radius, space, type as textType } from '../theme/tokens';
 import { Button } from './Button';
 import { GlassCard } from './GlassCard';
-import { CheckIcon, ChevronRightIcon, CloseIcon, HangerIcon, LayersIcon, SunIcon } from './icons';
+import { CheckIcon, ChevronRightIcon, CloseIcon } from './icons';
+import { OnboardingMockup, type OnboardingStepId } from './OnboardingMockup';
 
 interface Step {
-  icon: React.ReactNode;
-  title: string;
-  body: string;
+  id: OnboardingStepId;
+  caption: string;
 }
 
 const STEPS: Step[] = [
-  {
-    icon: <HangerIcon size={40} color={color.text1} />,
-    title: 'Digitize your closet',
-    body:
-      'Photograph or pick a photo of each piece you own. Tag its category, color, pattern and formality — your wardrobe lives on this device, never in the cloud, and you can export a full backup any time.',
-  },
-  {
-    icon: <SunIcon size={40} color={color.text1} />,
-    title: "Get today's outfit",
-    body:
-      'Every day, get a complete outfit ranked by real color-wheel harmony, formality and how recently each piece was worn — with a plain-language reason why.',
-  },
-  {
-    icon: <LayersIcon size={40} color={color.text1} />,
-    title: 'Shuffle, build, or log it',
-    body:
-      "Don't love the pick? Shuffle for the next-best option, build your own outfit with a live match score, or log what you actually wore in one tap.",
-  },
+  { id: 'digitize', caption: 'Digitize your closet — nothing leaves this device.' },
+  { id: 'suggest', caption: "Today's outfit, matched for you." },
+  { id: 'act', caption: 'Shuffle, log it, or save the look.' },
 ];
 
 interface OnboardingScreenProps {
@@ -93,14 +85,11 @@ export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
 
       <View style={styles.body}>
         <GlassCard style={styles.card}>
-          {current.icon}
-          <Text style={[textType.title, { color: color.text1, marginTop: space.lg, textAlign: 'center' }]}>
-            {current.title}
-          </Text>
-          <Text style={[textType.body, { color: color.text2, marginTop: space.sm, textAlign: 'center' }]}>
-            {current.body}
-          </Text>
+          <OnboardingMockup step={current.id} />
         </GlassCard>
+        <Text style={[textType.heading, { color: color.text1, marginTop: space.lg, textAlign: 'center' }]}>
+          {current.caption}
+        </Text>
       </View>
 
       <Button
