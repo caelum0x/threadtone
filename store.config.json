@@ -1,0 +1,24 @@
+{
+  "configVersion": 0,
+  "apple": {
+    "info": {
+      "en-US": {
+        "title": "Wearday",
+        "subtitle": "Private closet, no account",
+        "description": "Wearday is a private wardrobe and outfit planner that lives entirely on your phone. No account, no sign-up, nothing ever leaves your device.\n\nBuild your digital closet by photographing or picking photos of what you already own. Every day, get a complete outfit suggestion — color-wheel harmony, formality, and how recently each piece was worn — with a plain-language reason why. Not feeling it? Shuffle for the next option, or build your own look with a live match score.\n\nTrack cost-per-wear, spot the real gaps in your closet, pack smarter for trips with an outfit-based packing list, and dig into your style with wear-history insights — all backed by on-device storage, not a server you don't control.\n\nNo social feed to join, no account to lose access to, no photo upload to a cloud you don't own. Export a full backup of your wardrobe any time, straight to a file that's yours — switch phones, reinstall, or just keep a copy, on your terms.",
+        "keywords": [
+          "wardrobe",
+          "outfit",
+          "closet",
+          "what to wear",
+          "color theory",
+          "style planner",
+          "capsule wardrobe",
+          "fashion organizer",
+          "private",
+          "no account"
+        ]
+      }
+    }
+  }
+}

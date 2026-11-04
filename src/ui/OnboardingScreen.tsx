@@ -28,7 +28,7 @@ const STEPS: Step[] = [
     icon: <HangerIcon size={40} color={color.text1} />,
     title: 'Digitize your closet',
     body:
-      'Photograph or pick a photo of each piece you own. Tag its category, color, pattern and formality — your wardrobe lives on this device, never in the cloud.',
+      'Photograph or pick a photo of each piece you own. Tag its category, color, pattern and formality — your wardrobe lives on this device, never in the cloud, and you can export a full backup any time.',
   },
   {
     icon: <SunIcon size={40} color={color.text1} />,
