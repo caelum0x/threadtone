@@ -37,3 +37,6 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# signed build artifacts (real signed .ipa/.xcarchive, too large for git)
+/build-artifacts
